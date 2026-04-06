@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VPN Гайды — Обход блокировок</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Onest:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #ffffff0f;
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --accent3: #43e97b;
+    --text: #f0f0f8;
+    --muted: #8888aa;
+    --dim: #444460;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Onest', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6c63ff22 0%, transparent 70%);
+    top: -100px; left: -100px;
+    pointer-events: none;
+  }
+
+  .hero-glow2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff6b6b15 0%, transparent 70%);
+    bottom: 0; right: 10%;
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent)44;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.2s forwards;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(2.8rem, 8vw, 6rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.35s forwards;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, #6c63ff, #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--muted);
+    margin-top: 1.5rem;
+    max-width: 540px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.5s forwards;
+  }
+
+  .nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.65s forwards;
+  }
+
+  .pill {
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    background: var(--surface);
+  }
+
+  .pill:hover, .pill.active {
+    border-color: var(--accent)66;
+    color: var(--text);
+    background: var(--accent)15;
+  }
+
+  .scroll-hint {
+    margin-top: 4rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--dim);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    animation: fadeUp 0.7s ease 0.8s forwards;
+  }
+
+  .scroll-line {
+    width: 40px;
+    height: 1px;
+    background: var(--dim);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── MAIN CONTENT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem 8rem;
+  }
+
+  /* ── GUIDE SECTION ── */
+  .guide {
+    margin-bottom: 5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .guide.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .guide-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .guide-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--accent)33;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 60px;
+    text-align: right;
+  }
+
+  .guide-title-wrap {}
+
+  .guide-tag {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .tag-free { background: #43e97b22; color: #43e97b; }
+  .tag-paid { background: #ff6b6b22; color: #ff6b6b; }
+
+  h2 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .guide-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ── CARDS GRID ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .card {
+    background: var(--card);
+    padding: 1.5rem;
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+  }
+
+  .card h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
+  .card ul {
+    list-style: none;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  .card ul li {
+    padding: 3px 0;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .card ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--dim);
+  }
+
+  /* ── STEPS ── */
+  .steps-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 1rem;
+  }
+
+  .steps {
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step {
+    counter-increment: step;
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.92rem;
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step::before {
+    content: counter(step);
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--accent)15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text { color: var(--muted); line-height: 1.6; }
+  .step-text code {
+    font-size: 0.82rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* ── ALERTS ── */
+  .alert {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    margin-top: 1rem;
+    line-height: 1.5;
+  }
+
+  .alert-warn {
+    background: #ff6b6b0e;
+    border: 1px solid #ff6b6b22;
+    color: #ffaaaa;
+  }
+
+  .alert-tip {
+    background: #43e97b0e;
+    border: 1px solid #43e97b22;
+    color: #90f0b0;
+  }
+
+  .alert-icon { flex-shrink: 0; font-size: 1rem; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-section {
+    margin-top: 6rem;
+    padding-top: 4rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .compare-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .compare-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  thead tr {
+    background: var(--surface);
+  }
+
+  th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: var(--surface); }
+
+  td:first-child {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .yes { color: #43e97b; }
+  .no { color: #ff6b6b99; }
+  .warn { color: #ffcc44; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--dim);
+    font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">Практическое руководство</div>
+    <h1>Обход<br><span>блокировок</span><br>на Windows</h1>
+    <p class="hero-sub">Пять способов — от бесплатного WARP до платного Amnezia Premium. Выбери подходящий и настрой за 10 минут.</p>
+    <nav class="nav-pills">
+      <a href="#warp" class="pill">WARP</a>
+      <a href="#proton" class="pill">Proton VPN</a>
+      <a href="#bpb" class="pill">BPB Worker</a>
+      <a href="#subs" class="pill">Подписки</a>
+      <a href="#premium" class="pill">Amnezia Premium</a>
+      <a href="#compare" class="pill">Сравнение</a>
+    </nav>
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      ПРОКРУТИ ВНИЗ
+    </div>
+  </div>
+</section>
+
+<main class="container">
+
+  <!-- ── WARP ── -->
+  <section class="guide" id="warp">
+    <div class="guide-header">
+      <div class="guide-num">01</div>
+      <div class="guide-title-wrap">
+        <span class="guide-tag tag-free">Бесплатно</span>
+        <h2>WARP</h2>
+        <p class="guide-desc">Cloudflare WARP через AmneziaWG — лучший вариант для старта. Без ограничений по трафику, стабильное соединение. Выбрать страну нельзя, зато просто и надёжно.</p>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Плюсы</div>
+        <ul>
+          <li>Без ограничений по трафику</li>
+          <li>Стабильное соединение</li>
+          <li>Просто настроить</li>
+          <li>Можно выбрать страну сервера</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Минусы</div>
+        <ul>
+          <li>Нет UDP (Discord не работает)</li>
+          <li>Нет раздельного туннелирования</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Клиент</div>
+        <ul>
+          <li>AmneziaWG (мод)</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="steps-title">Установка</p>
+    <div class="steps">
+      <div class="step"><div class="step-text">Скачать <code>amneziawg-amd64-X.X.X.msi</code> с GitHub (amnezia-vpn/amneziawg-windows-client) и установить</div></div>
+      <div class="step"><div class="step-text">Зайти на <code>warp-generator.github.io</code>, выбрать нужный сервер (например США) и скачать конфиг AWG 1.5</div></div>
+      <div class="step"><div class="step-text">Открыть конфиг в блокноте, найти строку <code>Endpoint</code> и сменить порт на <code>903</code> или <code>880</code></div></div>
+      <div class="step"><div class="step-text">В AmneziaWG нажать «Добавить туннель» и выбрать файл конфига</div></div>
+      <div class="step"><div class="step-text">Подключиться и проверить</div></div>
+    </div>
+
+    <div class="alert alert-warn"><span class="alert-icon">⚠</span> Если не подключается — попробуй порты: 80, 443, 880, 903, 1194, 4500, 51820</div>
+    <div class="alert alert-tip"><span class="alert-icon">💡</span> Держи два конфига: стандартный и с сервером в США — для ИИ-сервисов которые не работают в России</div>
+  </section>
+
+  <!-- ── PROTON ── -->
+  <section class="guide" id="proton">
+    <div class="guide-header">
+      <div class="guide-num">02</div>
+      <div class="guide-title-wrap">
+        <span class="guide-tag tag-free">Бесплатно</span>
+        <h2>Proton VPN</h2>
+        <p class="guide-desc">Бесплатный VPN с выбором страны. Скорость хорошая, соединение иногда нестабильное. Конфиги нужно пересоздавать раз в год.</p>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Плюсы</div>
+        <ul>
+          <li>Выбор страны сервера</li>
+          <li>Поддержка UDP</li>
+          <li>Много серверов</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Минусы</div>
+        <ul>
+          <li>Иногда нестабильно</li>
+          <li>Конфиги истекают через год</li>
+          <li>Нужна конвертация конфигов</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="steps-title">Установка</p>
+    <div class="steps">
+      <div class="step"><div class="step-text">Зарегистрироваться на <code>account.protonvpn.com</code> → «Продолжить с Free»</div></div>
+      <div class="step"><div class="step-text">Перейти на страницу генерации конфигов, вписать любое название → «Создать конфиг». Скачать сразу несколько для разных серверов</div></div>
+      <div class="step"><div class="step-text">Зайти на <code>proton-converter.github.io</code>, выбрать скачанные конфиги и программу AmneziaWG</div></div>
+      <div class="step"><div class="step-text">Выбрать параметры мусора (начни с первого варианта), включить переключатель AWG 1.5</div></div>
+      <div class="step"><div class="step-text">Скачать конвертированные конфиги и импортировать в AmneziaWG через «Добавить туннель»</div></div>
+    </div>
+
+    <div class="alert alert-warn"><span class="alert-icon">⚠</span> Если конфиг не работает — попробуй порты: 80, 443, 1194, 4500, 51820</div>
+    <div class="alert alert-tip"><span class="alert-icon">💡</span> Поставь английский язык в настройках Proton — станут доступны все страны для бесплатных конфигов</div>
+  </section>
+
+  <!-- ── BPB ── -->
+  <section class="guide" id="bpb">
+    <div class="guide-header">
+      <div class="guide-num">03</div>
+      <div class="guide-title-wrap">
+        <span class="guide-tag tag-free">Бесплатно</span>
+        <h2>BPB Worker Panel</h2>
+        <p class="guide-desc">Превращает бесплатный Cloudflare Worker в личный VPN-сервис. Иранский проект. Cloudflare может обнаружить панель и выдать ошибку 1011.</p>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Плюсы</div>
+        <ul>
+          <li>Личный сервер</li>
+          <li>Гибкие настройки</li>
+          <li>Много протоколов</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Минусы</div>
+        <ul>
+          <li>Нет UDP (Discord)</li>
+          <li>Лимит 100к запросов/день</li>
+          <li>РКН блокирует TLS у некоторых</li>
+          <li>Может словить ошибку 1011</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="steps-title">Автоматическая установка</p>
+    <div class="steps">
+      <div class="step"><div class="step-text">Зайти на <code>cloudflare.com</code>, войти через Google-аккаунт</div></div>
+      <div class="step"><div class="step-text">Скачать скрипт BPB Wizard с GitHub, распаковать и запустить <code>.exe</code></div></div>
+      <div class="step"><div class="step-text">Ввести <code>1</code> в консоль → нажать Allow в браузере → ещё раз <code>1</code> → Enter</div></div>
+      <div class="step"><div class="step-text">Когда скрипт завершится — ввести <code>y</code> для открытия панели, сменить пароль</div></div>
+      <div class="step"><div class="step-text">В разделе VLESS-TROJAN: выключить IPv6, включить все галочки, принять настройки</div></div>
+      <div class="step"><div class="step-text">Скопировать подписку и вставить в Karing или Clash Verge</div></div>
+    </div>
+
+    <div class="alert alert-warn"><span class="alert-icon">⚠</span> Если консоль зависла на шаге 3 — включи VPN, РКН блокирует подключение к Cloudflare</div>
+    <div class="alert alert-warn"><span class="alert-icon">⚠</span> Не вводи пароли и данные карт при подключении через Non TLS</div>
+  </section>
+
+  <!-- ── SUBS ── -->
+  <section class="guide" id="subs">
+    <div class="guide-header">
+      <div class="guide-num">04</div>
+      <div class="guide-title-wrap">
+        <span class="guide-tag tag-free">Бесплатно</span>
+        <h2>Публичные подписки</h2>
+        <p class="guide-desc">Коллекции публичных серверов от китайских и иранских пользователей. Серверы живут от 1 дня до нескольких месяцев. Использовать на свой страх и риск.</p>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Плюсы</div>
+        <ul>
+          <li>Выбор страны и сервера</li>
+          <li>Поддержка UDP</li>
+          <li>Много серверов</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Минусы</div>
+        <ul>
+          <li>Ненадёжные, быстро умирают</li>
+          <li>Риск безопасности</li>
+          <li>Нужна фильтрация рабочих</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Клиенты</div>
+        <ul>
+          <li>NekoRay</li>
+          <li>Hiddify</li>
+          <li>Karing</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="steps-title">Через NekoRay</p>
+    <div class="steps">
+      <div class="step"><div class="step-text">Скачать NekoRay с GitHub, распаковать и запустить</div></div>
+      <div class="step"><div class="step-text">Вставить ссылку на подписку, например: <code>raw.githubusercontent.com/Pawdroid/Free-servers/main/sub</code></div></div>
+      <div class="step"><div class="step-text">ПКМ → Текущая группа → Удалить дубликаты</div></div>
+      <div class="step"><div class="step-text">Запустить URL Test — дождаться результатов, отсортировать по скорости</div></div>
+      <div class="step"><div class="step-text">ПКМ → Удалить недоступные → ПКМ по лучшему серверу → Запустить → включить Режим TUN</div></div>
+    </div>
+
+    <div class="alert alert-warn"><span class="alert-icon">⚠</span> Не вводи пароли и личные данные при подключении к публичным серверам — это чужие серверы</div>
+  </section>
+
+  <!-- ── PREMIUM ── -->
+  <section class="guide" id="premium">
+    <div class="guide-header">
+      <div class="guide-num">05</div>
+      <div class="guide-title-wrap">
+        <span class="guide-tag tag-paid">Платно</span>
+        <h2>Amnezia Premium</h2>
+        <p class="guide-desc">Платный VPN от создателей AmneziaWG. 20 локаций, высокая стабильность, до 7 устройств одновременно. Минимальный срок — 6 месяцев.</p>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Характеристики</div>
+        <ul>
+          <li>20 локаций на выбор</li>
+          <li>Протоколы: AmneziaWG и VLESS</li>
+          <li>До 7 устройств</li>
+          <li>Скидка 50% при наличии другого VPN</li>
+          <li>Пробник на 3 дня — по запросу</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-label">Минусы</div>
+        <ul>
+          <li>Платно (мин. 6 месяцев)</li>
+          <li>Нет раздельного туннелирования в приложении</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="steps-title">Установка</p>
+    <div class="steps">
+      <div class="step"><div class="step-text">Написать в официальную поддержку и попросить пробник на 3 дня перед покупкой</div></div>
+      <div class="step"><div class="step-text">Оформить покупку на официальном сайте (или зеркале если заблокирован)</div></div>
+      <div class="step"><div class="step-text">На почту придёт ключ для AmneziaVPN и ссылка на личный кабинет</div></div>
+      <div class="step"><div class="step-text">Выполнить инструкции из личного кабинета</div></div>
+    </div>
+
+    <p class="steps-title" style="margin-top:1.5rem">Для геймеров — через WireSock</p>
+    <div class="steps">
+      <div class="step"><div class="step-text">Скачать все 7 конфигов из личного кабинета</div></div>
+      <div class="step"><div class="step-text">Установить WireSock с <code>wiresock.net</code></div></div>
+      <div class="step"><div class="step-text">Импортировать конфиги → нажать «Изменить» → прокрутить вниз</div></div>
+      <div class="step"><div class="step-text">Выбрать «Туннелируемые приложения», добавить нужные игры → сохранить</div></div>
+    </div>
+
+    <div class="alert alert-tip"><span class="alert-icon">💡</span> В официальном AmneziaVPN на ПК нет раздельного туннелирования — пинг в играх поднимается. WireSock решает эту проблему</div>
+  </section>
+
+  <!-- ── COMPARE ── -->
+  <section class="compare-section" id="compare">
+    <h2 class="compare-title">Сравнение</h2>
+    <p class="compare-sub">Краткая таблица для выбора подходящего варианта</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Способ</th>
+            <th>Цена</th>
+            <th>Страна</th>
+            <th>UDP</th>
+            <th>Лимиты</th>
+            <th>Стабильность</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>WARP</td>
+            <td class="yes">Бесплатно</td>
+            <td class="yes">Да</td>
+            <td class="no">Нет</td>
+            <td class="yes">Нет</td>
+            <td class="yes">Высокая</td>
+          </tr>
+          <tr>
+            <td>Proton VPN</td>
+            <td class="yes">Бесплатно</td>
+            <td class="yes">Да</td>
+            <td class="yes">Да</td>
+            <td class="yes">Нет</td>
+            <td class="warn">Средняя</td>
+          </tr>
+          <tr>
+            <td>BPB Worker</td>
+            <td class="yes">Бесплатно</td>
+            <td class="no">Нет</td>
+            <td class="no">Нет</td>
+            <td class="warn">100к/день</td>
+            <td class="warn">Средняя</td>
+          </tr>
+          <tr>
+            <td>Подписки</td>
+            <td class="yes">Бесплатно</td>
+            <td class="yes">Да</td>
+            <td class="yes">Да</td>
+            <td class="yes">Нет</td>
+            <td class="no">Низкая</td>
+          </tr>
+          <tr>
+            <td>Amnezia Premium</td>
+            <td class="warn">Платно</td>
+            <td class="yes">20 локаций</td>
+            <td class="yes">Да</td>
+            <td class="yes">7 устройств</td>
+            <td class="yes">Высокая</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Составлено на основе личного опыта настройки · 2026
+</footer>
+
+<script>
+  // Intersection Observer for scroll animations
+  const guides = document.querySelectorAll('.guide');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  guides.forEach(g => observer.observe(g));
+
+  // Also animate compare section
+  const compare = document.querySelector('.compare-section');
+  if (compare) {
+    compare.style.opacity = '0';
+    compare.style.transform = 'translateY(30px)';
+    compare.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    const obs2 = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        compare.style.opacity = '1';
+        compare.style.transform = 'translateY(0)';
+      }
+    }, { threshold: 0.1 });
+    obs2.observe(compare);
+  }
+
+  // Active nav pill on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const pills = document.querySelectorAll('.pill');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 200) current = s.id;
+    });
+    pills.forEach(p => {
+      p.classList.toggle('active', p.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
